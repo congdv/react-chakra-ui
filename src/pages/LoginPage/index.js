@@ -1,20 +1,42 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Flex, Heading, Input, FormControl, FormLabel, Form, FormErrorMessage, Field } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
+import useApi from 'utils/hooks/useApi';
+import { BASE_ROUTE, WORKSPACE_BASE_ROUTE } from 'routes';
+import { useDispatch } from 'react-redux';
+import { getStoredAccessToken, storeAccessToken, storeRefreshToken } from 'utils/authToken';
+import { useHistory } from 'react-router-dom';
+import { setUser } from 'stores/account';
 
 const LoginPage = () => {
   const {
     handleSubmit,
     register,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm();
+  
+  const dispatch = useDispatch();
+  const history = useHistory();
+  const [apiState, authenticateUser] = useApi();
+  const { data, errors: apiErrors, isLoading, success } = apiState;
 
-  function onSubmit(values) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        alert(JSON.stringify(values, null, 2));
-        resolve();
-      }, 3000);
+  useEffect(() => {
+    if (success) {
+      dispatch(setUser(data.user));
+      storeAccessToken(data.access_token);
+      storeRefreshToken(data.refresh_token);
+      history.push(WORKSPACE_BASE_ROUTE);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, success]);
+
+  function onSubmit(payload) {
+    return authenticateUser('/user/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: payload.email,
+        password: payload.password,
+      }),
     });
   }
 
@@ -28,6 +50,7 @@ const LoginPage = () => {
             <Input
               id="email"
               placeholder="example@mail.com"
+              type="email"
               {...register('email', {
                 required: 'Email is required',
                 minLength: { value: 4, message: 'Minimum length should be 4' },
@@ -45,6 +68,7 @@ const LoginPage = () => {
             <Input
               id="password"
               placeholder="*******"
+              type="password"
               {...register('password', {
                 required: 'Password is required',
                 minLength: { value: 8, message: 'Minimum length should be 8' },
@@ -52,7 +76,7 @@ const LoginPage = () => {
             />
             <FormErrorMessage>{errors.password && errors.password.message}</FormErrorMessage>
           </FormControl>
-          <Button mt={6} colorScheme="teal" isLoading={isSubmitting} type="submit" w="100%">
+          <Button mt={6} colorScheme="teal" isLoading={apiState.isLoading} type="submit" w="100%">
             Login
           </Button>
         </form>

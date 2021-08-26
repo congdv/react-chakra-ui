@@ -1,8 +1,8 @@
 import { createSelector } from 'reselect';
 import { setLoading } from 'stores/app';
 import { authRequest } from 'utils/http';
-import { removeStoredAccessToken } from 'utils/authToken';
-import { history } from 'routes/history';
+import { removeStoredAccessToken, removeStoredRefreshToken } from 'utils/authToken';
+import { isEmpty } from 'lodash';
 import { BASE_ROUTE } from 'routes';
 
 
@@ -48,10 +48,10 @@ export const setUser = (user) => {
 export const fetchUser = () => {
   return async (dispatch) => {
     dispatch(setLoading(true));
-    const { response } = await authRequest('/auth/me');
+    const { response } = await authRequest('/user/me');
 
     if (response) {
-      dispatch(setUser(response.data));
+      dispatch(setUser(response));
     }
 
     dispatch(setLoading(false));
@@ -61,7 +61,7 @@ export const fetchUser = () => {
 export const logout = () => {
   return (dispatch) => {
     dispatch(setUserLogout());
-    history.push(BASE_ROUTE);
+    
   };
 };
 
@@ -69,6 +69,7 @@ export const setUserLogout = () => {
   return (dispatch) => {
     dispatch(setLoading(true));
     removeStoredAccessToken();
+    removeStoredRefreshToken();
     dispatch({ type: AccountTypes.LOGOUT });
     dispatch({ type: 'RESET_STORE' });
 
@@ -84,6 +85,6 @@ export const getAccountState = (state) => {
 
 export const isUserLoaded = createSelector(getAccountState, (account) => account.loaded);
 
-export const isAuthenticated = createSelector(getAccountState, (account) => account.user?.authenticated ?? false);
+export const isAuthenticated = createSelector(getAccountState, (account) => !isEmpty(account.user));
 
 export const currentUser = createSelector(getAccountState, (account) => account.user);

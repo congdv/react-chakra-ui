@@ -28,7 +28,7 @@ export const createRequest = async (url, options = defaultOptions) => {
   };
 
   try {
-    const res = await fetch(backendBasePrefix + url, initOptions);
+    const res = await fetch(`${backendBasePrefix}/api/v1${url}`, initOptions);
 
     response = await res.json();
   } catch (e) {
@@ -44,7 +44,7 @@ export const authRequest = async (url, options = defaultOptions) => {
     ...defaultOptions,
     ...options,
     headers: {
-      Authorization: `Bearer ${getStoredAccessToken()?.accessToken ?? null}`,
+      Authorization: `Bearer ${getStoredAccessToken()}`,
       ...defaultOptions.headers,
     },
   });

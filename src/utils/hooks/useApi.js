@@ -9,7 +9,7 @@ const defaultOptions = {
   },
 };
 
-const API_BASE_URL = `${process.env.REACT_APP_BACKEND_BASE_URL}`;
+const API_BASE_URL = `${process.env.REACT_APP_BACKEND_BASE_URL}/api/v1`;
 
 const useApi = () => {
   const [state, setState] = useState({ data: undefined, errors: [], success: false, isLoading: false });
@@ -38,8 +38,8 @@ const useApi = () => {
 
       setState({
         isLoading: false,
-        data: response.data,
-        success: response.success ?? false,
+        data: response,
+        success: true,
         // eslint-disable-next-line valid-typeof
         errors: typeof response.message === 'array' ? response.message : [response.message] ?? [],
       });
